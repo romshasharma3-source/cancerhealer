@@ -150,7 +150,8 @@ for msg in st.session_state["messages"]:
     """, unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
-# Sample complex prompts
+
+# Sample complex prompts (show only if chat is empty)
 complex_questions = [
     "What are the treatment options for recurrent MSI-H endometrial cancer after progression on pembrolizumab?",
     "How does the presence of a TP53 mutation impact the prognosis and treatment strategy in high-grade serous ovarian cancer?",
@@ -159,21 +160,18 @@ complex_questions = [
     "How does tumor mutational burden influence the choice of immunotherapy in non-small cell lung cancer with negative PD-L1 expression?"
 ]
 
-st.markdown("### 🧠 Sample Expert Questions")
-st.caption("Select a question from the dropdown to see how OncoAlly responds:")
-
-# Dropdown selection
-selected_question = st.selectbox("Choose a sample question:", ["-- Select --"] + complex_questions)
-
-# Only show button if a real question is selected
-if selected_question != "-- Select --":
-    if st.button("Ask OncoAlly"):
-        st.session_state["messages"].append({"role": "user", "content": selected_question})
-        with st.spinner("OncoAlly is thinking..."):
-            response = asyncio.run(ask_question(selected_question))
-            answer = response["messages"][-1].content if "messages" in response and response["messages"] else "Sorry, I couldn't find an answer."
-            st.session_state["messages"].append({"role": "assistant", "content": answer})
-        st.rerun()
+if not st.session_state["messages"]:
+    st.markdown("### 🧠 Sample Expert Questions")
+    st.caption("Select a question from the dropdown to see how OncoAlly responds:")
+    selected_question = st.selectbox("Choose a sample question:", ["-- Select --"] + complex_questions)
+    if selected_question != "-- Select --":
+        if st.button("Ask OncoAlly"):
+            st.session_state["messages"].append({"role": "user", "content": selected_question})
+            with st.spinner("OncoAlly is thinking..."):
+                response = asyncio.run(ask_question(selected_question))
+                answer = response["messages"][-1].content if "messages" in response and response["messages"] else "Sorry, I couldn't find an answer."
+                st.session_state["messages"].append({"role": "assistant", "content": answer})
+            st.rerun()
 
 # --- Input UI ---
 if st.session_state.get("clear_input"):
