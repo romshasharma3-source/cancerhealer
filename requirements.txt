@@ -1,9 +1,9 @@
-langchain
+langchain==0.1.16
 langchain_groq
 langchain_core
 langchain_community
 langchain-text-splitters
-langchain-openai
+langchain-openai==0.1.7
 openai
 python-dotenv
 ipykernel
@@ -18,3 +18,5 @@ wikipedia
 langgraph
 matplotlib
 xmltodict
+pydantic==1.10.13
+streamlit==1.35.0

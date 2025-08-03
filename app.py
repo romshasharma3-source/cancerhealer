@@ -1,39 +1,44 @@
 import streamlit as st
 import os
+from dotenv import load_dotenv
 from langchain_openai import AzureChatOpenAI
 from langchain_community.tools.pubmed.tool import PubmedQueryRun
 from langgraph.prebuilt import create_react_agent
-from dotenv import load_dotenv
-# Load environment variables early
+from langchain_core.runnables import Runnable
+
+# Load env vars
 load_dotenv()
 
-# --- UI Setup ---
+# --- Page Config ---
 st.set_page_config(
-    page_title="OncoAlly - Cancer Support Chatbot",
+    page_title="OncoAlley – Because Behind Every Question Is a Life",
     page_icon="🩺",
     layout="wide",
-    initial_sidebar_state="expanded"
 )
 
-st.markdown(
-    """
+# --- Custom CSS ---
+st.markdown("""
     <style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: #f4f6fa;
+    }
     .main {
-        background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+        padding-top: 1rem;
     }
     .chat-container {
-        max-height: 60vh;
-        overflow-y: auto;
-        padding: 10px;
-        margin-bottom: 10px;
-        background: #f8fafc;
+        background: white;
+        padding: 2rem;
         border-radius: 16px;
-        box-shadow: 0 2px 8px #e0e7ff;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        max-height: 70vh;
+        overflow-y: auto;
+        margin-bottom: 1rem;
     }
     .chat-bubble {
+        margin-bottom: 1.25rem;
         display: flex;
-        align-items: flex-end;
-        margin-bottom: 12px;
+        align-items: flex-start;
     }
     .chat-bubble.user {
         justify-content: flex-end;
@@ -43,145 +48,119 @@ st.markdown(
     }
     .bubble {
         max-width: 70%;
-        padding: 12px 18px;
-        border-radius: 18px;
+        padding: 1rem 1.4rem;
         font-size: 16px;
-        box-shadow: 0 1px 4px #e0e7ff;
+        line-height: 1.5;
+        border-radius: 18px;
     }
     .bubble.user {
-        background: #6366f1;
-        color: #fff;
+        background: #4f46e5;
+        color: white;
         border-bottom-right-radius: 4px;
     }
     .bubble.assistant {
-        background: #f1f5f9;
-        color: #222;
+        background: #e5e7eb;
+        color: #1f2937;
         border-bottom-left-radius: 4px;
     }
     .avatar {
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
+        margin: 0 10px;
         border-radius: 50%;
-        margin: 0 8px;
-        background: #e0e7ff;
+        background: #c7d2fe;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 22px;
+    }
+    .header {
+        background: linear-gradient(to right, #6366f1, #8b5cf6);
+        padding: 1.5rem;
+        border-radius: 16px;
+        color: white;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .header h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+    .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
     }
     .input-row {
         display: flex;
-        align-items: center;
-        gap: 8px;
-        position: sticky;
-        bottom: 0;
-        background: #f8fafc;
-        padding: 10px 0;
+        gap: 10px;
+        margin-top: 1rem;
+    }
+    .input-row input {
+        flex: 1;
     }
     </style>
-    """,
-    unsafe_allow_html=True
-)
-
-# --- System Prompt ---
-system_prompt = """You are OncoAlly, a compassionate and intelligent virtual assistant designed to support cancer patients, caregivers, and concerned individuals with their questions and concerns. Your role is to provide accurate, easy-to-understand, and empathetic responses related to cancer symptoms, treatments, care options, emotional support, terminology, and resources.\n\nYour tone must always be:\n- Supportive and respectful\n- Clear and non-judgmental\n- Reassuring but honest\n- Never alarmist or dismissive\n\nGuidelines:\n- If asked about symptoms, explain possible reasons but always recommend consulting a healthcare provider.\n- If unsure or outside your scope (e.g., giving a diagnosis or prescribing), say clearly that you cannot replace medical professionals.\n- Avoid giving false hope or guarantees.\n- Encourage mental and emotional well-being alongside clinical care.\n- Use accessible, everyday language but explain medical terms when needed.\n- Be culturally and emotionally sensitive.\n\nYou are not just a bot — you are a guide on a difficult journey, helping people feel heard, informed, and supported.\n\nWhen responding:\n- Begin with warmth and empathy.\n- Share reliable information where possible.\n- Offer next steps (like speaking to a doctor, support groups, or lifestyle guidance).\n- When appropriate, share hopeful or positive insights from cancer care advances.\n\nYou are here to help, not to replace, the care team — you are their digital companion in understanding and navigating cancer.\n\n"""
-
-# --- Azure OpenAI Setup ---
-llm = AzureChatOpenAI(
-    openai_api_version="2024-08-01-preview",
-    model=os.getenv("AZURE_OPENAI_MODEL_NAME"),
-    azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-    api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-    temperature=0,
-    max_tokens=1000,
-)
-
-# --- Tool Setup ---
-tool = PubmedQueryRun()
-
-# --- Agent Setup ---
-agent = create_react_agent(
-    llm,
-    prompt=system_prompt,
-    tools=[tool],
-)
-
-# --- Session State ---
-if "messages" not in st.session_state:
-    st.session_state["messages"] = []
-if "agent" not in st.session_state:
-    st.session_state["agent"] = agent
+""", unsafe_allow_html=True)
 
 # --- Sidebar ---
-st.sidebar.title("OncoAlly Options")
-if st.sidebar.button("Clear Chat"):
-    st.session_state["messages"] = []
-    st.success("Chat history cleared.")
-if st.sidebar.button("Reset Agent"):
-    st.session_state["agent"] = create_react_agent(
-        llm,
-        prompt=system_prompt,
-        tools=[tool],
-    )
-    st.success("Agent reset.")
-
+st.sidebar.image("https://raw.githubusercontent.com/AJAnujsharma/ONCOALLY/main/ChatGPT%20Image%20Aug%201%2C%202025%2C%2009_18_22%20PM.png", width=180)
+st.sidebar.markdown("### 🩺 OncoAlly")
 st.sidebar.markdown("""
-**About OncoAlly**
+**Your AI-powered cancer support companion.**
 
-OncoAlly is your digital companion for cancer-related questions. Get empathetic, reliable, and clear answers, plus resources and support options.
+- 👨‍💻 *Microsoft Global Hackathon 2025*
+- ⚡ *AI-Powered by Azure, PubMed & MCP Agentic Tech*
+- 🔍 *Answers sourced from* **35M+ PubMed articles**
+
+ℹ️ *Based on trusted data from the National Library of Medicine.*
 """)
+if st.sidebar.button("🧹 Clear Chat"):
+    st.session_state["messages"] = []
+    st.success("Chat cleared.")
+if st.sidebar.button("🔁 Reset Agent"):
+    if "agent" in st.session_state:
+        del st.session_state["agent"]
+    st.success("Agent has been reset.")
 
-# --- Main Chat UI ---
-st.title("🩺 OncoAlly - Cancer Support Chatbot")
-st.markdown(
-    """
-    <div style='font-size:18px; color:#6366f1; margin-bottom:20px;'>
-    Ask anything about cancer symptoms, treatments, care, or emotional support. OncoAlly is here to help you feel heard and informed.
-    </div>
-    """,
-    unsafe_allow_html=True
-)
+# --- Header ---
+st.markdown("""
+<div class="header">
+    <h1>🩺 OncoAlley – Because Behind Every Question Is a Life</h1>
+    <p>OncoAlly offers answers, not diagnoses. Whether you're seeking clarity on symptoms, treatments, or emotional care, we provide support rooted in trusted medical literature — always with compassion, never as a substitute for a doctor.</p>
+</div>
+""", unsafe_allow_html=True)
 
 # --- Chat Container ---
 st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
 for msg in st.session_state["messages"]:
-    if msg["role"] == "user":
-        st.markdown(f"""
-        <div class='chat-bubble user'>
-            <div class='bubble user'>{msg['content']}</div>
-            <div class='avatar'>🧑</div>
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <div class='chat-bubble assistant'>
-            <div class='avatar'>🩺</div>
-            <div class='bubble assistant'>{msg['content']}</div>
-        </div>
-        """, unsafe_allow_html=True)
+    role_class = "user" if msg["role"] == "user" else "assistant"
+    icon = "🧑" if msg["role"] == "user" else "🩺"
+    st.markdown(f"""
+    <div class="chat-bubble {role_class}">
+        {'<div class="avatar">' + icon + '</div>' if role_class == "assistant" else ''}
+        <div class="bubble {role_class}">{msg['content']}</div>
+        {'<div class="avatar">' + icon + '</div>' if role_class == "user" else ''}
+    </div>
+    """, unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
-# --- Input Row at Bottom ---
-st.markdown("<div class='input-row'>", unsafe_allow_html=True)
-user_input = st.text_input("Type your question here...", "", key="user_input")
-send, clear = st.columns([1,1])
+# --- Input UI ---
+user_input = st.text_input("Ask OncoAlly your question...", placeholder="e.g. What are early signs of breast cancer?")
+send, clear = st.columns([1, 1])
 if send.button("Send", use_container_width=True):
     if user_input.strip():
         st.session_state["messages"].append({"role": "user", "content": user_input})
         with st.spinner("OncoAlly is thinking..."):
-            response = st.session_state["agent"].invoke({"messages": st.session_state["messages"]})
+            response = get_agent().invoke({"messages": st.session_state["messages"]})
             answer = response["messages"][-1].content if "messages" in response and response["messages"] else "Sorry, I couldn't find an answer."
             st.session_state["messages"].append({"role": "assistant", "content": answer})
         st.rerun()
-if clear.button("Clear", use_container_width=True):
-    st.session_state["messages"] = []
-    st.rerun()
-st.markdown("</div>", unsafe_allow_html=True)
+if clear.button("Clear Input", use_container_width=True):
+    st.session_state["user_input"] = ""
 
 # --- Footer ---
 st.markdown("""
----
-<div style='text-align:center; color:#6366f1;'>
-    <b>OncoAlly</b> &copy; 2025 | Compassionate Cancer Support
+<hr style="margin-top: 2rem;">
+<div style="text-align:center; font-size:14px; color:#4f46e5;">
+    <b>OncoAlly</b> &copy; 2025 – Built with ❤️ by <b>Anuj Sharma</b><br>
+    Compassionate support backed by 35M+ biomedical citations.
 </div>
 """, unsafe_allow_html=True)
