@@ -11,20 +11,24 @@ from prompt_config import PROMPT_CONFIG
 import asyncio
 # Load env vars
 load_dotenv()
+
 os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY")
 os.environ['LANGCHAIN_TRACING_V2'] = 'true'
 os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGHCHAIN_PROJECT")
 
-# --- Logging Setup ---
+# Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
+    format="%(asctime)s %(levelname)s %(message)s",
+    handlers=[
+        logging.FileHandler("oncoally_app.log"),
+        logging.StreamHandler()
+    ]
 )
-logger = logging.getLogger("oncoally-app")
 
 # --- Page Config ---
 st.set_page_config(
-    page_title="OncoAlley – Because Behind Every Question Is a Life",
+    page_title="OnCura – Because Behind Every Question Is a Life",
     page_icon="🩺",
     layout="wide",
 )
@@ -114,22 +118,20 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Session State Initialization ---
+
 if "messages" not in st.session_state:
     st.session_state["messages"] = []
 if "user_input" not in st.session_state:
     st.session_state["user_input"] = ""
 
 # --- Sidebar ---
-st.sidebar.image("https://raw.githubusercontent.com/AJAnujsharma/ONCOALLY/main/ChatGPT%20Image%20Aug%201%2C%202025%2C%2009_18_22%20PM.png", width=180)
-st.sidebar.markdown("### 🩺 OncoAlly")
+st.sidebar.image("https://raw.githubusercontent.com/romshasharma3-source/cancerhealer/main/logo.jpeg", width=180)
+st.sidebar.markdown("### 🩺 Cancerhealer.AI")
 st.sidebar.markdown("""
 **Your AI-powered cancer support companion.**
 
-- 👨‍💻 [Microsoft Global Hackathon 2025](https://innovationstudio.microsoft.com/hackathons/hackathon2025/project/96924)
-- ⚡ *AI-Powered by Azure, PubMed & MCP Agentic Tech*
-- 🔍 *Answers sourced from* **35M+ PubMed articles**
+- ⚡ *AI-Powered medical Assistant*
 
-ℹ️ *Based on trusted data from the National Library of Medicine.*
 """)
 
 if st.sidebar.button("🧹 Clear Chat"):
@@ -143,8 +145,8 @@ if st.sidebar.button("🔁 Reset Agent"):
 # --- Header ---
 st.markdown("""
 <div class="header">
-    <h1>🩺 OncoAlley – Because Behind Every Question Is a Life</h1>
-    <p>OncoAlly offers answers, not diagnoses. Whether you're seeking clarity on symptoms, treatments, or emotional care, we provide support rooted in trusted medical literature — always with compassion, never as a substitute for a doctor.</p>
+    <h1>🩺 OnCura – Because Behind Every Question Is a Life</h1>
+    <p>OnCura offers answers, not diagnoses. Whether you're seeking clarity on symptoms, treatments, or emotional care, we provide support rooted in trusted medical literature — always with compassion, never as a substitute for a doctor.</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -173,20 +175,21 @@ complex_questions = [
 
 if not st.session_state["messages"]:
     st.markdown("### 🧠 Sample Expert Questions")
-    st.caption("Select a question from the dropdown to see how OncoAlly responds:")
+    st.caption("Select a question from the dropdown to see how OnCura responds:")
     selected_question = st.selectbox("Choose a sample question:", ["-- Select --"] + complex_questions)
     if selected_question != "-- Select --":
-        if st.button("Ask OncoAlly"):
-            logger.info(f"Sample question selected: {selected_question}")
+        if st.button("Ask OnCUra"):
             st.session_state["messages"].append({"role": "user", "content": selected_question})
-            with st.spinner("OncoAlly is thinking..."):
+            logging.info(f"User asked: {selected_question}")
+            with st.spinner("OnCura is thinking..."):
                 try:
+                    logging.info("Calling ask_question for sample question...")
                     response = asyncio.run(ask_question(selected_question))
-                    logger.info(f"Agent response raw: {response}")
+                    logging.info(f"Response received: {response}")
                     answer = response["messages"][-1].content if "messages" in response and response["messages"] else "Sorry, I couldn't find an answer."
-                    logger.info(f"Agent answer: {answer}")
+                    logging.info(f"LLM response: {answer}")
                 except Exception as e:
-                    logger.error(f"Error during agent invocation: {e}")
+                    logging.error(f"Error from LLM (ask_question): {e}", exc_info=True)
                     answer = "Sorry, an error occurred while processing your question."
                 st.session_state["messages"].append({"role": "assistant", "content": answer})
             st.rerun()
@@ -195,23 +198,23 @@ if not st.session_state["messages"]:
 if st.session_state.get("clear_input"):
     st.session_state["user_input"] = ""
     st.session_state["clear_input"] = False
-user_input = st.text_input("Ask OncoAlly your question...", placeholder="e.g. What are early signs of breast cancer?", key="user_input")
+user_input = st.text_input("Ask OnCura your question...", placeholder="e.g. What are early signs of breast cancer?", key="user_input")
 send, clear = st.columns([1, 1])
 
 
 if send.button("Send", use_container_width=True):
     if user_input.strip():
-        logger.info(f"User question: {user_input}")
         st.session_state["messages"].append({"role": "user", "content": user_input})
-        with st.spinner("OncoAlly is thinking..."):
+        logging.info(f"User asked: {user_input}")
+        with st.spinner("OnCura is thinking..."):
             latest_question = st.session_state["messages"][-1]["content"]
             try:
+                logging.info("Calling ask_question for user input...")
                 response = asyncio.run(ask_question(latest_question))
-                logger.info(f"Agent response raw: {response}")
                 answer = response["messages"][-1].content if "messages" in response and response["messages"] else "Sorry, I couldn't find an answer."
-                logger.info(f"Agent answer: {answer}")
+                logging.info(f"LLM response: {answer}")
             except Exception as e:
-                logger.error(f"Error during agent invocation: {e}")
+                logging.error(f"Error from LLM (ask_question): {e}", exc_info=True)
                 answer = "Sorry, an error occurred while processing your question."
             st.session_state["messages"].append({"role": "assistant", "content": answer})
         st.rerun()
@@ -223,7 +226,7 @@ if clear.button("Clear Input", use_container_width=True):
 st.markdown("""
 <hr style="margin-top: 2rem;">
 <div style="text-align:center; font-size:14px; color:#4f46e5;">
-    <b>OncoAlly</b> &copy; 2025 – Crafted with ❤️ by the OncoAlly Core Engineering Team</b><br>
-    Compassionate support backed by 35M+ biomedical citations.
+    <b>Cancerhealer.AI</b> &copy; 2025 – Copyright 2025 </b><br>
+    
 </div>
 """, unsafe_allow_html=True)
