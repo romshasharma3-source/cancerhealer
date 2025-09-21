@@ -126,7 +126,7 @@ if "user_input" not in st.session_state:
 
 # --- Sidebar ---
 st.sidebar.image("https://raw.githubusercontent.com/romshasharma3-source/cancerhealer/main/logo.jpeg", width=180)
-
+st.sidebar.markdown("### 🩺 Cancerhealer.AI")
 st.sidebar.markdown("""
 **Your AI-powered cancer support companion.**
 
@@ -162,27 +162,6 @@ for msg in st.session_state["messages"]:
     </div>
     """, unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
-
-if not st.session_state["messages"]:
-    st.markdown("### 🧠 Sample Expert Questions")
-    st.caption("Select a question from the dropdown to see how OnCura responds:")
-    selected_question = st.selectbox("Choose a sample question:", ["-- Select --"] + complex_questions)
-    if selected_question != "-- Select --":
-        if st.button("Ask OnCUra"):
-            st.session_state["messages"].append({"role": "user", "content": selected_question})
-            logging.info(f"User asked: {selected_question}")
-            with st.spinner("OnCura is thinking..."):
-                try:
-                    logging.info("Calling ask_question for sample question...")
-                    response = asyncio.run(ask_question(selected_question))
-                    logging.info(f"Response received: {response}")
-                    answer = response["messages"][-1].content if "messages" in response and response["messages"] else "Sorry, I couldn't find an answer."
-                    logging.info(f"LLM response: {answer}")
-                except Exception as e:
-                    logging.error(f"Error from LLM (ask_question): {e}", exc_info=True)
-                    answer = "Sorry, an error occurred while processing your question."
-                st.session_state["messages"].append({"role": "assistant", "content": answer})
-            st.rerun()
 
 # --- Input UI ---
 if st.session_state.get("clear_input"):
