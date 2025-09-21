@@ -163,16 +163,6 @@ for msg in st.session_state["messages"]:
     """, unsafe_allow_html=True)
 st.markdown("</div>", unsafe_allow_html=True)
 
-
-# Sample complex prompts (show only if chat is empty)
-complex_questions = [
-    "What are the treatment options for recurrent MSI-H endometrial cancer after progression on pembrolizumab?",
-    "How does the presence of a TP53 mutation impact the prognosis and treatment strategy in high-grade serous ovarian cancer?",
-    "Can you explain the role of BRCA1/2 mutations in selecting between PARP inhibitors and chemotherapy for metastatic breast cancer?",
-    "What are the current recommendations for managing immune-related colitis in a patient receiving combination checkpoint inhibitors for metastatic melanoma?",
-    "How does tumor mutational burden influence the choice of immunotherapy in non-small cell lung cancer with negative PD-L1 expression?"
-]
-
 if not st.session_state["messages"]:
     st.markdown("### 🧠 Sample Expert Questions")
     st.caption("Select a question from the dropdown to see how OnCura responds:")
