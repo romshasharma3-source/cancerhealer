@@ -126,7 +126,7 @@ if "user_input" not in st.session_state:
 
 # --- Sidebar ---
 st.sidebar.image("https://raw.githubusercontent.com/romshasharma3-source/cancerhealer/main/logo.jpeg", width=180)
-st.sidebar.markdown("### 🩺 Cancerhealer.AI")
+
 st.sidebar.markdown("""
 **Your AI-powered cancer support companion.**
 
@@ -198,7 +198,7 @@ if not st.session_state["messages"]:
 if st.session_state.get("clear_input"):
     st.session_state["user_input"] = ""
     st.session_state["clear_input"] = False
-user_input = st.text_input("Ask OnCura your question...", placeholder="e.g. What are early signs of breast cancer?", key="user_input")
+user_input = st.text_input("Ask OnCura in any language...", placeholder="e.g. What are early signs of breast cancer?", key="user_input")
 send, clear = st.columns([1, 1])
 
 
